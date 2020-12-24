@@ -1,5 +1,6 @@
 import socket
 import struct
+import pickle
 
 multicast_addr = '224.0.0.1'
 bind_addr = '0.0.0.0'
@@ -15,4 +16,5 @@ sock.bind((bind_addr, port))
 
 while True:
     message, address = sock.recvfrom(255)
-    print(message.decode())
+    mydata = pickle.loads(message)
+    print(vars(mydata))
