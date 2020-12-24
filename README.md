@@ -4,7 +4,7 @@
 ### Host app-1
 
 ``` shell
-vagrant@app-1:~$ python3 dtn-client.py 
+vagrant@app-1:~$ python3 main.py 
 your id: 1123da20830c4b4e8354cedad3aae30d
 1) print received messages
 2) send a message
@@ -20,7 +20,7 @@ added:
 ### Host app-2
 
 ``` shell
-vagrant@app-2:~$ python3 dtn-client.py 
+vagrant@app-2:~$ python3 main.py 
 your id: 093b1d219ccc493a9986b3c7336593fe
 1) print received messages
 2) send a message
