@@ -1,5 +1,7 @@
+import time
+import threading
+
 class Message:
-    # TODO: ganti id pesan menjadi self.my_id+"/"+urutan_pesan
     latitude = 0
     longitude = 0
     hop = 0
@@ -18,13 +20,20 @@ class Message:
         self.destination_id = destination_id
         self.source_id = source_id
         self.message = message
+        thread_timer = threading.Thread(target=self.timer)
+        thread_timer.start()
 
     def increase_hop(self):
         self.hop = self.hop + 1
+
+    def timer(self):
+        while(self.lifetime > 0):
+            time.sleep(1)
+            self.decrease_lifetime()
     
     def decrease_lifetime(self):
         self.lifetime = self.lifetime - 1
 
-    def invalidate():
+    def invalidate(self):
         self.is_valid = False
     

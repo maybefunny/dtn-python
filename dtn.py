@@ -41,11 +41,9 @@ class Dtn:
         sys.stdout.flush()
         thread_message_receiver = threading.Thread(target=self.message_receiver);
         thread_message_broadcaster = threading.Thread(target=self.message_broadcaster)
-        thread_message_timer = threading.Thread(target=self.message_timer)
         thread_message_validator = threading.Thread(target=self.message_validator)
         thread_message_receiver.start()
         thread_message_broadcaster.start()
-        thread_message_timer.start()
         thread_message_validator.start()
 
     def __del__(self):
@@ -53,8 +51,8 @@ class Dtn:
             print("will be terminated in 3 s")
             self.running = False
             for i in range(3):
-                print(3-i)
                 time.sleep(1)
+                print(3-i)
             print("terminated")
 
     # handle received message
@@ -88,32 +86,25 @@ class Dtn:
                     self.sender.sendto(data, (self.multicast_addr, self.port))
         print("message broadcaster terminated")
 
-    def message_timer(self):
-        while self.running:
-            time.sleep(1);
-            for msg in list(self.broadcast_queue):
-                if(self.broadcast_queue[msg].lifetime > 0):
-                    self.broadcast_queue[msg].decrease_lifetime()
-        print("message timer terminated")
-
     def message_validator(self):
         while self.running:
             time.sleep(1);
             for msg in list(self.broadcast_queue):
                 # TODO: tambahkan batasan GPS
                 message = self.broadcast_queue[msg]
-                if(message.lifetime <= 0):
-                    print("message with id: " + message.id + " will be deleted due to lifetime")
-                    message.is_valid = False
-                if(message.hop > 3):
-                    print("message with id: " + message.id + " will be deleted due to hop")
-                    message.is_valid = False
                 if(not message.is_valid):
-                    del self.broadcast_queue[msg]
+                    continue
+                if(message.lifetime <= 0):
+                    print("message with id: " + message.id + " will be invalidated due to lifetime")
+                    message.invalidate()
+                if(message.hop > 3):
+                    print("message with id: " + message.id + " will be invalidated due to hop")
+                    message.invalidate()
         print("message validator terminated")
 
     def add_message(self, dst, msg):
         message = Message(0, 0, 60, self.my_id + "/" + str(self.message_count), dst, self.my_id, msg)
+        self.increase_message_count()
         self.broadcast_queue[message.id] = message
         print("added:")
         print(vars(self.broadcast_queue[message.id]))
@@ -124,3 +115,6 @@ class Dtn:
         for msg in list(self.received_msg):
             print(vars(self.received_msg[msg]))
             del self.received_msg[msg]
+
+    def increase_message_count(self):
+        self.message_count = self.message_count + 1
