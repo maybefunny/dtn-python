@@ -62,17 +62,19 @@ class Dtn:
         while self.running:
             ready = select.select([self.receiver], [], [], 1)
             if ready[0]:
-                message, address = self.receiver.recvfrom(255)
-                mydata = pickle.loads(message)
-                if(mydata.destination_id == self.my_id and mydata.id not in self.received_msg):
-                    self.received_msg[mydata.id] = mydata
-                    print("received a message from :" + mydata.source_id)
-                    print("message: " + mydata.message)
-                elif(mydata.id not in self.broadcast_queue):
-                    #increase hop count and add to queue
-                    mydata.source_id = self.my_id
-                    mydata.increase_hop()
-                    self.broadcast_queue[mydata.id] = mydata
+                data, address = self.receiver.recvfrom(255)
+                message = pickle.loads(data)
+                if(message.id not in self.received_msg and message.id not in self.broadcast_queue):
+                    if(message.destination_id == self.my_id):
+                        print("received a message from: " + message.source_id)
+                        print("message: " + message.message)
+                        self.received_msg[message.id] = message
+                    else:
+                        #increase hop count and add to queue
+                        print("message added to broadcast queue")
+                        message.source_id = self.my_id
+                        message.increase_hop()
+                        self.broadcast_queue[message.id] = message
         print("message receiver terminated")
 
     # create message broadcaster thread
@@ -80,9 +82,10 @@ class Dtn:
         while self.running:
             time.sleep(1);
             for msg in list(self.broadcast_queue):
-                if(self.broadcast_queue[msg].hop < 3 and self.broadcast_queue[msg].lifetime > 0):
-                    message = pickle.dumps(self.broadcast_queue[msg])
-                    self.sender.sendto(message, (self.multicast_addr, self.port))
+                message = self.broadcast_queue[msg]
+                if(message.is_valid):
+                    data = pickle.dumps(message)
+                    self.sender.sendto(data, (self.multicast_addr, self.port))
         print("message broadcaster terminated")
 
     def message_timer(self):
@@ -97,15 +100,15 @@ class Dtn:
         while self.running:
             time.sleep(1);
             for msg in list(self.broadcast_queue):
-                delete = False
                 # TODO: tambahkan batasan GPS
-                if(self.broadcast_queue[msg].lifetime <= 0):
-                    print("message with id: " + self.broadcast_queue[msg].id + " will be deleted due to lifetime")
-                    delete = True
-                if(self.broadcast_queue[msg].hop > 3):
-                    print("message with id: " + self.broadcast_queue[msg].id + " will be deleted due to hop")
-                    delete = True
-                if(delete):
+                message = self.broadcast_queue[msg]
+                if(message.lifetime <= 0):
+                    print("message with id: " + message.id + " will be deleted due to lifetime")
+                    message.is_valid = False
+                if(message.hop > 3):
+                    print("message with id: " + message.id + " will be deleted due to hop")
+                    message.is_valid = False
+                if(not message.is_valid):
                     del self.broadcast_queue[msg]
         print("message validator terminated")
 

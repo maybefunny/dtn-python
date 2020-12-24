@@ -8,6 +8,7 @@ class Message:
     destination_id = ""
     source_id = ""
     message = ""
+    is_valid = True
     
     def __init__(self, latitude, longitude, lifetime, id, destination_id, source_id, message):
         self.latitude = latitude
@@ -23,4 +24,7 @@ class Message:
     
     def decrease_lifetime(self):
         self.lifetime = self.lifetime - 1
+
+    def invalidate():
+        self.is_valid = False
     
