@@ -8,6 +8,7 @@ Vagrant.configure("2") do |config|
       app.vm.box = 'ubuntu/trusty64'
       app.vm.hostname = "app-#{i+1}"
       app.vm.network :private_network, ip: "192.168.10.#{10+i+1}"
+      app.vm.synced_folder ".", "/home/vagrant/dtn/"
     end
   end
 end
